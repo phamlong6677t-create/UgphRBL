@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Roblox Mô Phỏng</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Source Sans Pro', sans-serif;
+        }
+        
+        :root {
+            --primary-color: #00a2ff;
+            --dark-bg: #1a1a1a;
+            --light-bg: #f2f2f2;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --text-light: #cccccc;
+            --nav-bg: #ffffff;
+            --nav-text: #333333;
+            --section-bg: #ffffff;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            background-color: var(--light-bg);
+            color: var(--text-color);
+            overflow-x: hidden;
+            padding-bottom: 60px; /* Space for bottom navigation */
+            transition: background-color 0.3s ease;
+        }
+        
+        body.dark-mode {
+            --light-bg: #0e0e0e;
+            --card-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --text-light: #888888;
+            --nav-bg: #121212;
+            --nav-text: #ffffff;
+            --section-bg: #1a1a1a;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        
+        #loading-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .loading-progress {
+            position: absolute;
+            bottom: 50px;
+            width: 80%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--primary-color);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--nav-bg);
+            padding: 8px 5px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            transition: var(--transition);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--nav-text);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            padding: 5px 10px;
+            border-radius: 4px;
+            min-width: 60px;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .nav-icon {
+            font-size: 18px;
+            margin-bottom: 3px;
+        }
+        
+        .nav-text {
+            font-size: 12px;
+            text-align: center;
+        }
+        
+        /* Main Content */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-color);
+        }
+        
+        .section-title i {
+            color: var(--primary-color);
+        }
+        
+        /* Game Grid */
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .game-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            cursor: pointer;
+            animation: slideUp 0.5s ease;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .game-thumb {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            background: linear-gradient(45deg, #6a93cb, #a4bfef);
+            transition: var(--transition);
+        }
+        
+        .game-card:hover .game-thumb {
+            transform: scale(1.05);
+        }
+        
+        .game-info {
+            padding: 10px;
+        }
+        
+        .game-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+        
+        .game-creator {
+            color: var(--text-light);
+            font-size: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .game-players {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 5px;
+        }
+        
+        /* Game Detail */
+        #game-detail {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--card-bg);
+            z-index: 1000;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+            color: var(--text-color);
+        }
+        
+        .game-detail-header {
+            height: 250px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .game-detail-banner {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+        
+        .game-detail-header:hover .game-detail-banner {
+            transform: scale(1.05);
+        }
+        
+        .game-detail-back {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background-color: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+            font-size: 14px;
+        }
+        
+        .game-detail-back:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+            transform: translateX(-5px);
+        }
+        
+        .game-detail-content {
+            padding: 15px;
+            animation: slideUp 0.5s ease;
+        }
+        
+        .game-detail-title {
+            font-size: 22px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .game-detail-creator {
+            color: var(--text-light);
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .game-detail-description {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            padding: 12px;
+            background-color: var(--section-bg);
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        
+        .game-stats {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background-color: var(--section-bg);
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        
+        .play-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .play-button:hover {
+            background-color: #0088cc;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 162, 255, 0.3);
+        }
+        
+        /* Ranking Page */
+        #ranking-page {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .ranking-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        /* Team Page */
+        #team-page {
+            display: none;
+            padding: 15px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .update-item {
+            background-color: var(--card-bg);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            animation: slideUp 0.5s ease;
+        }
+        
+        .update-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .update-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+        }
+        
+        .update-title i {
+            color: var(--primary-color);
+        }
+        
+        .update-date {
+            color: var(--text-light);
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .update-content {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* Settings Page */
+        #settings-page {
+            display: none;
+            padding: 15px;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .settings-section {
+            background-color: var(--card-bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        .settings-title {
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-color);
+        }
+        
+        .settings-option {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--section-bg);
+        }
+        
+        .settings-option:last-child {
+            border-bottom: none;
+        }
+        
+        .option-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .option-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .option-desc {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+        
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+        
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        select {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid var(--section-bg);
+            background-color: var(--card-bg);
+            color: var(--text-color);
+        }
+        
+        .bg-option {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            background-size: cover;
+            background-position: center;
+            border: 2px solid transparent;
+            transition: var(--transition);
+        }
+        
+        .bg-option:hover, .bg-option.selected {
+            border-color: var(--primary-color);
+            transform: scale(1.05);
+        }
+        
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--section-bg);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--text-light);
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--primary-color);
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .game-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 12px;
+            }
+            
+            .game-thumb {
+                height: 90px;
+            }
+            
+            .nav-item {
+                min-width: 50px;
+                padding: 5px 8px;
+            }
+            
+            .nav-icon {
+                font-size: 16px;
+            }
+            
+            .nav-text {
+                font-size: 11px;
+            }
+            
+            .game-detail-header {
+                height: 200px;
+            }
+            
+            .section-title {
+                font-size: 18px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-grid {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            }
+            
+            .nav-text {
+                font-size: 10px;
+            }
+            
+            .nav-icon {
+                font-size: 15px;
+            }
+        }
+        
+        .error-message {
+            background-color: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .retry-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <video id="loading-video" autoplay muted>
+            <!-- Thay thế URL bằng video của bạn -->
+            <source src="https://cdn.coverr.co/videos/coverr-robot-says-hello-6666/1080p.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <div class="loading-progress">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+    </div>
+
+    <!-- Main Content - Home Page -->
+    <div class="container" id="home-page">
+        <h2 class="section-title">
+            <i class="fas fa-star"></i>
+            <span data-lang="featured">Để Xuất Cho Bạn</span>
+        </h2>
+        <div class="game-grid" id="featured-games">
+            <!-- Games will be loaded from JSON -->
+        </div>
+
+        <h2 class="section-title">
+            <i class="fas fa-fire"></i>
+            <span data-lang="popular">Trò chơi phổ biến</span>
+        </h2>
+        <div class="game-grid" id="popular-games">
+            <!-- Games will be loaded from JSON -->
+        </div>
+        
+        <div id="load-error" class="error-message" style="display: none;">
+            <p>Không thể tải danh sách game. Vui lòng kiểm tra kết nối và thử lại.</p>
+            <button class="retry-button" onclick="loadGames()">Thử lại</button>
+        </div>
+    </div>
+
+    <!-- Ranking Page -->
+    <div class="container" id="ranking-page">
+        <div class="ranking-header">
+            <h2 class="section-title">
+                <i class="fas fa-trophy"></i>
+                <span data-lang="ranking">Bảng xếp hạng</span>
+            </h2>
+            <div class="sort-options">
+                <select id="sort-select">
+                    <option value="popular" data-lang="popular">Phổ biến nhất</option>
+                    <option value="rating" data-lang="rating">Đánh giá cao</option>
+                    <option value="new" data-lang="new">Mới nhất</option>
+                </select>
+            </div>
+        </div>
+        <div class="game-grid" id="ranking-games">
+            <!-- Games will be loaded from JSON -->
+        </div>
+        
+        <div id="ranking-error" class="error-message" style="display: none;">
+            <p>Không thể tải danh sách xếp hạng. Vui lòng kiểm tra kết nối và thử lại.</p>
+            <button class="retry-button" onclick="loadGames()">Thử lại</button>
+        </div>
+    </div>
+
+    <!-- Team Page -->
+    <div class="container" id="team-page">
+        <h2 class="section-title">
+            <i class="fas fa-bullhorn"></i>
+            <span data-lang="updates">Cập nhật mới nhất</span>
+        </h2>
+        <div id="updates-container">
+            <div class="update-item">
+                <div class="update-title">
+                    <i class="fas fa-paint-brush"></i>
+                    <span data-lang="update1-title">Cập nhật giao diện người dùng</span>
+                </div>
+                <div class="update-date">Ngày 15 tháng 10, 2023</div>
+                <div class="update-content" data-lang="update1-content">Chúng tôi đã cải thiện trải nghiệm người dùng với giao diện mới dễ sử dụng hơn. Các nút bấm được thiết kế rõ ràng và hiệu ứng chuyển động mượt mà.</div>
+            </div>
+            <div class="update-item">
+                <div class="update-title">
+                    <i class="fas fa-comments"></i>
+                    <span data-lang="update2-title">Thêm tính năng trò chuyện nhóm</span>
+                </div>
+                <div class="update-date">Ngày 10 tháng 10, 2023</div>
+                <div class="update-content" data-lang="update2-content">Giờ đây bạn có thể trò chuyện với tất cả thành viên trong nhóm cùng lúc. Tính năng mới hỗ trợ gửi tin nhắn văn bản, biểu tượng cảm xúc và hình ảnh.</div>
+            </div>
+            <div class="update-item">
+                <div class="update-title">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span data-lang="update3-title">Tối ưu hóa hiệu suất</span>
+                </div>
+                <div class="update-date">Ngày 5 tháng 10, 2023</div>
+                <div class="update-content" data-lang="update3-content">Cải thiện tốc độ tải trang và phản hồi ứng dụng. Tối ưu hóa bộ nhớ và giảm thiểu thời gian load game xuống 30%.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Page -->
+    <div class="container" id="settings-page">
+        <h2 class="section-title">
+            <i class="fas fa-cog"></i>
+            <span data-lang="settings">Cài đặt</span>
+        </h2>
+        
+        <div class="settings-section">
+            <h3 class="settings-title">
+                <i class="fas fa-paint-brush"></i>
+                <span data-lang="appearance">Giao diện</span>
+            </h3>
+            
+            <div class="settings-option">
+                <div class="option-info">
+                    <div class="option-title" data-lang="dark-mode">Chế độ tối</div>
+                    <div class="option-desc" data-lang="dark-mode-desc">Bật chế độ tối để bảo vệ mắt</div>
+                </div>
+                <label class="theme-switch">
+                    <input type="checkbox" id="dark-mode-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="settings-option">
+                <div class="option-info">
+                    <div class="option-title" data-lang="language">Ngôn ngữ</div>
+                    <div class="option-desc" data-lang="language-desc">Thay đổi ngôn ngữ hiển thị</div>
+                </div>
+                <select id="language-select">
+                    <option value="vi">Tiếng Việt</option>
+                    <option value="en">English</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="settings-section">
+            <h3 class="settings-title">
+                <i class="fas fa-image"></i>
+                <span data-lang="background">Hình nền</span>
+            </h3>
+            
+            <div>
+                <div class="bg-option selected" style="background-color: #f2f2f2;" data-bg="default"></div>
+                <div class="bg-option" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" data-bg="gradient1"></div>
+                <div class="bg-option" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);" data-bg="gradient2"></div>
+                <div class="bg-option" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);" data-bg="gradient3"></div>
+                <div class="bg-option" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);" data-bg="gradient4"></div>
+                <div class="bg-option" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);" data-bg="gradient5"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Detail Page -->
+    <div id="game-detail">
+        <div class="game-detail-header">
+            <img class="game-detail-banner" id="detail-banner" src="" alt="Game Banner">
+            <button class="game-detail-back" id="detail-back">
+                <i class="fas fa-arrow-left"></i>
+                <span data-lang="back">Quay lại</span>
+            </button>
+        </div>
+        <div class="game-detail-content">
+            <h1 class="game-detail-title" id="detail-title">
+                <i class="fas fa-gamepad"></i>
+                <span id="detail-title-text"></span>
+            </h1>
+            <div class="game-detail-creator" id="detail-creator"></div>
+            
+            <div class="game-stats">
+                <div class="stat">
+                    <i class="fas fa-users"></i>
+                    <span id="detail-players">0</span> <span data-lang="players">người chơi</span>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-heart"></i>
+                    <span id="detail-likes">0</span> <span data-lang="likes">thích</span>
+                </div>
+                <div class="stat">
+                    <i class="fas fa-play-circle"></i>
+                    <span id="detail-visits">0</span> <span data-lang="visits">lượt chơi</span>
+                </div>
+            </div>
+            
+            <p class="game-detail-description" id="detail-description"></p>
+            <button class="play-button" id="play-button">
+                <i class="fas fa-play"></i>
+                <span data-lang="play-now">Chơi Ngay</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <a href="#" class="nav-item active" id="home-nav">
+            <i class="fas fa-home nav-icon"></i>
+            <span class="nav-text" data-lang="home">Trang chủ</span>
+        </a>
+        <a href="#" class="nav-item" id="ranking-nav">
+            <i class="fas fa-trophy nav-icon"></i>
+            <span class="nav-text" data-lang="ranking">Xếp hạng</span>
+        </a>
+        <a href="#" class="nav-item" id="team-nav">
+            <i class="fas fa-users nav-icon"></i>
+            <span class="nav-text" data-lang="team">Tổ Đội</span>
+        </a>
+        <a href="#" class="nav-item" id="settings-nav">
+            <i class="fas fa-cog nav-icon"></i>
+            <span class="nav-text" data-lang="more">Thêm</span>
+        </a>
+    </div>
+
+    <script>
+        // Language data
+        const languageData = {
+            "vi": {
+                "featured": "Để Xuất Cho Bạn",
+                "popular": "Trò chơi phổ biến",
+                "ranking": "Bảng xếp hạng",
+                "updates": "Cập nhật mới nhất",
+                "settings": "Cài đặt",
+                "appearance": "Giao diện",
+                "dark-mode": "Chế độ tối",
+                "dark-mode-desc": "Bật chế độ tối để bảo vệ mắt",
+                "language": "Ngôn ngữ",
+                "language-desc": "Thay đổi ngôn ngữ hiển thị",
+                "background": "Hình nền",
+                "home": "Trang chủ",
+                "team": "Tổ Đội",
+                "more": "Thêm",
+                "back": "Quay lại",
+                "players": "người chơi",
+                "likes": "thích",
+                "visits": "lượt chơi",
+                "play-now": "Chơi Ngay",
+                "popular-opt": "Phổ biến nhất",
+                "rating": "Đánh giá cao",
+                "new": "Mới nhất",
+                "update1-title": "Cập nhật giao diện người dùng",
+                "update1-content": "Chúng tôi đã cải thiện trải nghiệm người dùng với giao diện mới dễ sử dụng hơn. Các nút bấm được thiết kế rõ ràng và hiệu ứng chuyển động mượt mà.",
+                "update2-title": "Thêm tính năng trò chuyện nhóm",
+                "update2-content": "Giờ đây bạn có thể trò chuyện với tất cả thành viên trong nhóm cùng lúc. Tính năng mới hỗ trợ gửi tin nhắn văn bản, biểu tượng cảm xúc và hình ảnh.",
+                "update3-title": "Tối ưu hóa hiệu suất",
+                "update3-content": "Cải thiện tốc độ tải trang và phản hồi ứng dụng. Tối ưu hóa bộ nhớ và giảm thiểu thời gian load game xuống 30%."
+            },
+            "en": {
+                "featured": "Featured For You",
+                "popular": "Popular Games",
+                "ranking": "Ranking",
+                "updates": "Latest Updates",
+                "settings": "Settings",
+                "appearance": "Appearance",
+                "dark-mode": "Dark Mode",
+                "dark-mode-desc": "Enable dark mode to protect your eyes",
+                "language": "Language",
+                "language-desc": "Change display language",
+                "background": "Background",
+                "home": "Home",
+                "team": "Team",
+                "more": "More",
+                "back": "Back",
+                "players": "players",
+                "likes": "likes",
+                "visits": "visits",
+                "play-now": "Play Now",
+                "popular-opt": "Most Popular",
+                "rating": "Top Rated",
+                "new": "Newest",
+                "update1-title": "User Interface Update",
+                "update1-content": "We have improved the user experience with a new easier-to-use interface. Buttons are clearly designed with smooth motion effects.",
+                "update2-title": "Added Group Chat Feature",
+                "update2-content": "You can now chat with all team members at once. The new feature supports text messages, emojis and images.",
+                "update3-title": "Performance Optimization",
+                "update3-content": "Improved page loading speed and application responsiveness. Optimized memory and reduced game load time by 30%."
+            }
+        };
+
+        // DOM Elements
+        const loadingScreen = document.getElementById('loading-screen');
+        const loadingVideo = document.getElementById('loading-video');
+        const progressBar = document.getElementById('progress-bar');
+        const homePage = document.getElementById('home-page');
+        const rankingPage = document.getElementById('ranking-page');
+        const teamPage = document.getElementById('team-page');
+        const settingsPage = document.getElementById('settings-page');
+        const gameDetail = document.getElementById('game-detail');
+        const homeNav = document.getElementById('home-nav');
+        const rankingNav = document.getElementById('ranking-nav');
+        const teamNav = document.getElementById('team-nav');
+        const settingsNav = document.getElementById('settings-nav');
+        const featuredGames = document.getElementById('featured-games');
+        const popularGames = document.getElementById('popular-games');
+        const rankingGames = document.getElementById('ranking-games');
+        const detailBack = document.getElementById('detail-back');
+        const detailTitle = document.getElementById('detail-title-text');
+        const detailCreator = document.getElementById('detail-creator');
+        const detailDescription = document.getElementById('detail-description');
+        const detailBanner = document.getElementById('detail-banner');
+        const detailPlayers = document.getElementById('detail-players');
+        const detailLikes = document.getElementById('detail-likes');
+        const detailVisits = document.getElementById('detail-visits');
+        const playButton = document.getElementById('play-button');
+        const sortSelect = document.getElementById('sort-select');
+        const darkModeToggle = document.getElementById('dark-mode-toggle');
+        const languageSelect = document.getElementById('language-select');
+        const bgOptions = document.querySelectorAll('.bg-option');
+        const loadError = document.getElementById('load-error');
+        const rankingError = document.getElementById('ranking-error');
+
+        // Initialize settings from localStorage
+        function initializeSettings() {
+            // Dark mode
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            document.body.classList.toggle('dark-mode', darkMode);
+            darkModeToggle.checked = darkMode;
+            
+            // Language
+            const language = localStorage.getItem('language') || 'vi';
+            languageSelect.value = language;
+            changeLanguage(language);
+            
+            // Background
+            const background = localStorage.getItem('background') || 'default';
+            document.body.style.background = getBackgroundStyle(background);
+            document.querySelectorAll('.bg-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.dataset.bg === background);
+            });
+        }
+
+        // Get background style based on selection
+        function getBackgroundStyle(bg) {
+            switch(bg) {
+                case 'gradient1': return 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                case 'gradient2': return 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+                case 'gradient3': return 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
+                case 'gradient4': return 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)';
+                case 'gradient5': return 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)';
+                default: return '#f2f2f2';
+            }
+        }
+
+        // Change language
+        function changeLanguage(lang) {
+            document.querySelectorAll('[data-lang]').forEach(element => {
+                const key = element.getAttribute('data-lang');
+                if (languageData[lang] && languageData[lang][key]) {
+                    element.textContent = languageData[lang][key];
+                }
+            });
+            
+            // Update select options
+            if (sortSelect) {
+                Array.from(sortSelect.options).forEach(option => {
+                    const key = option.getAttribute('data-lang');
+                    if (key && languageData[lang] && languageData[lang][key]) {
+                        option.textContent = languageData[lang][key];
+                    }
+                });
+            }
+        }
+
+        // Simulate loading progress
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 5;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(progressInterval);
+            }
+            progressBar.style.width = progress + '%';
+        }, 100);
+
+        // Handle loading video
+        loadingVideo.addEventListener('loadeddata', function() {
+            progressBar.style.width = '30%';
+        });
+        
+        loadingVideo.addEventListener('ended', function() {
+            progressBar.style.width = '100%';
+            setTimeout(() => {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                }, 500);
+            }, 500);
+        });
+
+        // Load games from JSON file
+        async function loadGames() {
+            try {
+                const response = await fetch('games.json');
+                if (!response.ok) {
+                    throw new Error('Không thể tải file games.json');
+                }
+                
+                const gameData = await response.json();
+                
+                // Clear existing games and errors
+                featuredGames.innerHTML = '';
+                popularGames.innerHTML = '';
+                rankingGames.innerHTML = '';
+                loadError.style.display = 'none';
+                rankingError.style.display = 'none';
+                
+                // Check if games exist
+                if (!gameData.games || gameData.games.length === 0) {
+                    throw new Error('Không có game nào trong file JSON');
+                }
+                
+                // Load featured games (first 2 games)
+                gameData.games.slice(0, 2).forEach((game, index) => {
+                    setTimeout(() => {
+                        const gameCard = createGameCard(game);
+                        featuredGames.appendChild(gameCard);
+                        rankingGames.appendChild(gameCard.cloneNode(true));
+                    }, index * 100);
+                });
+                
+                // Load popular games (the rest)
+                gameData.games.slice(2).forEach((game, index) => {
+                    setTimeout(() => {
+                        const gameCard = createGameCard(game);
+                        popularGames.appendChild(gameCard);
+                        rankingGames.appendChild(gameCard.cloneNode(true));
+                    }, (2 + index) * 100);
+                });
+                
+            } catch (error) {
+                console.error('Lỗi khi tải games:', error);
+                
+                // Show error message
+                loadError.style.display = 'block';
+                rankingError.style.display = 'block';
+                
+                // Clear game grids
+                featuredGames.innerHTML = '';
+                popularGames.innerHTML = '';
+                rankingGames.innerHTML = '';
+            }
+        }
+
+        // Create game card element
+        function createGameCard(game) {
+            const card = document.createElement('div');
+            card.className = 'game-card';
+            card.innerHTML = `
+                <img class="game-thumb" src="${game.thumb}" alt="${game.title}" onerror="this.src='https://via.placeholder.com/200x120/cccccc/666666?text=Ảnh+Lỗi'">
+                <div class="game-info">
+                    <div class="game-title">${game.title}</div>
+                    <div class="game-creator">${game.creator}</div>
+                    <div class="game-players">
+                        <i class="fas fa-users"></i>
+                        ${formatNumber(game.players)} <span data-lang="players">đang chơi</span>
+                    </div>
+                </div>
+            `;
+            
+            card.addEventListener('click', () => {
+                showGameDetail(game);
+            });
+            
+            return card;
+        }
+
+        // Format large numbers
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num;
+        }
+
+        // Show game detail
+        function showGameDetail(game) {
+            detailTitle.textContent = game.title;
+            detailCreator.textContent = `Tạo bởi: ${game.creator}`;
+            detailDescription.textContent = game.description;
+            detailBanner.src = game.banner;
+            detailPlayers.textContent = formatNumber(game.players);
+            detailLikes.textContent = formatNumber(game.likes);
+            detailVisits.textContent = formatNumber(game.visits);
+            
+            // Set play button URL
+            playButton.onclick = () => {
+                window.location.href = game.playUrl;
+            };
+            
+            // Hide other pages
+            homePage.style.display = 'none';
+            rankingPage.style.display = 'none';
+            teamPage.style.display = 'none';
+            settingsPage.style.display = 'none';
+            
+            // Show detail with animation
+            gameDetail.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Navigation handlers
+        homeNav.addEventListener('click', function(e) {
+            e.preventDefault();
+            resetNav();
+            this.classList.add('active');
+            
+            // Animate page transition
+            homePage.style.display = 'block';
+            homePage.style.animation = 'fadeIn 0.5s ease';
+            rankingPage.style.display = 'none';
+            teamPage.style.display = 'none';
+            settingsPage.style.display = 'none';
+            gameDetail.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+
+        rankingNav.addEventListener('click', function(e) {
+            e.preventDefault();
+            resetNav();
+            this.classList.add('active');
+            
+            // Animate page transition
+            rankingPage.style.display = 'block';
+            rankingPage.style.animation = 'fadeIn 0.5s ease';
+            homePage.style.display = 'none';
+            teamPage.style.display = 'none';
+            settingsPage.style.display = 'none';
+            gameDetail.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+
+        teamNav.addEventListener('click', function(e) {
+            e.preventDefault();
+            resetNav();
+            this.classList.add('active');
+            
+            // Animate page transition
+            teamPage.style.display = 'block';
+            teamPage.style.animation = 'fadeIn 0.5s ease';
+            homePage.style.display = 'none';
+            rankingPage.style.display = 'none';
+            settingsPage.style.display = 'none';
+            gameDetail.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+
+        settingsNav.addEventListener('click', function(e) {
+            e.preventDefault();
+            resetNav();
+            this.classList.add('active');
+            
+            // Animate page transition
+            settingsPage.style.display = 'block';
+            settingsPage.style.animation = 'fadeIn 0.5s ease';
+            homePage.style.display = 'none';
+            rankingPage.style.display = 'none';
+            teamPage.style.display = 'none';
+            gameDetail.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        });
+
+        detailBack.addEventListener('click', function() {
+            // Animate detail page out
+            gameDetail.style.animation = 'fadeIn 0.3s ease reverse';
+            setTimeout(() => {
+                gameDetail.style.display = 'none';
+                homePage.style.display = 'block';
+                document.body.style.overflow = 'auto';
+            }, 300);
+        });
+
+        // Sort functionality for ranking page
+        sortSelect.addEventListener('change', function() {
+            const sortValue = this.value;
+            const gameCards = Array.from(rankingGames.querySelectorAll('.game-card'));
+            
+            // Simple shuffle for demo purposes
+            gameCards.sort(() => Math.random() - 0.5);
+            
+            // Clear and reappend
+            rankingGames.innerHTML = '';
+            gameCards.forEach(card => {
+                rankingGames.appendChild(card);
+            });
+        });
+
+        // Dark mode toggle
+        darkModeToggle.addEventListener('change', function() {
+            document.body.classList.toggle('dark-mode', this.checked);
+            localStorage.setItem('darkMode', this.checked);
+        });
+
+        // Language select
+        languageSelect.addEventListener('change', function() {
+            const lang = this.value;
+            changeLanguage(lang);
+            localStorage.setItem('language', lang);
+        });
+
+        // Background options
+        bgOptions.forEach(option => {
+            option.addEventListener('click', function() {
+                const bg = this.dataset.bg;
+                document.body.style.background = getBackgroundStyle(bg);
+                localStorage.setItem('background', bg);
+                
+                // Update selection
+                bgOptions.forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+
+        // Reset navigation active states
+        function resetNav() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                item.classList.remove('active');
+            });
+        }
+
+        // Initialize the page
+        window.addEventListener('DOMContentLoaded', function() {
+            initializeSettings();
+            loadGames();
+            
+            // If the video doesn't load or fails, hide loading screen after 5 seconds
+            setTimeout(() => {
+                if (loadingScreen.style.display !== 'none') {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }
+            }, 5000);
+        });
+
+        // Disable zoom
+        document.addEventListener('touchstart', function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(event) {
+            const now = (new Date()).getTime();
+            if (now - lastTouchEnd <= 300) {
+                event.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
+        document.addEventListener('gesturestart', function(event) {
+            event.preventDefault();
+        });
+    </script>
+</body>
+</html>
